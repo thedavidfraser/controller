@@ -1,0 +1,657 @@
+
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="viewport" content="width=device-width, user-scalable=no">
+
+<style>
+
+/*
+tron #19bd9b
+asphalt #2a3c4f
+concrete #eceff2
+
+blue #3297da
+red #e84a3a
+orange #e77d20
+purple #9956b4
+green #2bcd70
+light-grey #bdc2c7
+yellow #f3c60c
+torquise #119077
+dark-grey #7c8a8e
+
+
+*/
+
+body {
+	font-family: Helvetica, Arial, san-serif;
+	font-size: 100%;
+	margin: 0; padding: 0;
+	color: #19bd9b;
+	background-color: #2a3c4f;
+}
+
+#container {
+	
+}
+
+.controller {
+	display:none;
+}
+.controller.active {
+	display: block;
+}
+
+.box {
+	float: left;
+	width: 32%;
+	height: 1em;
+	border-left:3px solid #2a3c4f;
+	border-bottom:3px solid #2a3c4f;
+	line-height: 1em;
+	padding: 0.9em 0;
+	background-color: #eceff2;
+	color: #2a3c4f;
+	text-align: center;
+	opacity: 1;
+	font-size: 1.8em;
+
+}
+.box.active {
+	opacity: 1;
+	background-color: #19bd9b !important;
+}
+
+#controllerP .output {
+	width: 50%;
+	margin: 0 auto;
+	background-color: #2a3c4f;
+	color: #19bd9b;
+	min-height: 1em;
+	line-height: 1em;
+	padding: 0.9em 0;
+	font-size: 1.8em;
+	text-align: center;
+}
+
+
+
+
+
+
+.controlBox {
+	position: relative;
+	float: left;
+	width: 50%;
+	height: 300px;
+	line-height: 1em;
+	padding: 0;
+}
+#speed {
+	margin-right: -4px;
+	border-right: 4px solid #eceff2;
+}
+.middleMarker,
+#speed .touchMarker {
+	display: block;
+	position: absolute;
+	top: 49%;
+	left: 0;
+	width: 100%;
+	height: 0;
+	border-top: 3px solid #eceff2;
+}
+#speed .touchMarker {
+	top: 25px;
+	border-top: 5px solid #19bd9b;
+
+}
+.centerMarker,
+#direction .touchMarker {
+	display: block;
+	position: absolute;
+	top: 0;
+	left: 50%;
+	width: 0;
+	height: 100%;
+	border-left: 3px solid #eceff2;
+}
+#direction .touchMarker {
+	left: 25px;
+	border-left: 5px solid #19bd9b;
+}
+
+#controllerL .output {
+	position: absolute;
+	top: 0;
+	left: 50%;
+	width: 5em;
+	margin-left: -2.5em;
+	background-color: #2a3c4f;
+	color: #19bd9b;
+	min-height: 1em;
+	line-height: 1em;
+	padding: 0.45em 0;
+	font-size: 1.8em;
+	text-align: center;
+
+	border-right: 3px solid #eceff2;
+	border-bottom: 3px solid #eceff2;
+	border-left: 3px solid #eceff2;
+}
+
+.output span {
+	float: left;
+	display: block;
+	width: 50%;
+	text-align: center;
+}
+
+
+
+</style>
+
+</head>
+<body>
+<div id="container" class="container">
+
+	<div id="controllerP" class="controller active">
+
+		<div class="output"></div>
+
+		<div class="box" data-coord="-1:1">&lt;++</div>
+		<div class="box" data-coord="0:1">++</div>
+		<div class="box" data-coord="1:1">++&gt;</div>
+
+		<div class="box" data-coord="-1:0.5">&lt;+</div>
+		<div class="box" data-coord="0:0.5">+</div>
+		<div class="box" data-coord="1:0.5">+&gt;</div>
+
+		<div class="box" data-coord="-1:-0.5">&lt;-</div>
+		<div class="box" data-coord="0:-0.5">-</div>
+		<div class="box" data-coord="1:-0.5">-&gt;</div>
+
+		<div class="box" data-coord="-1:-1">&lt;--</div>
+		<div class="box" data-coord="0:-1">--</div>
+		<div class="box" data-coord="1:-1">--&gt;</div>
+
+	</div>
+
+	<div id="controllerL" class="controller">
+
+		<div id="speed" class="controlBox">
+			<span class="middleMarker"></span>
+		</div>
+		<div id="direction" class="controlBox">
+			<span class="centerMarker"></span>
+		</div>
+
+		<div class="output"></div>
+
+	</div>
+
+
+</div>
+
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script>
+
+/*
+
+Requires jQuery
+
+
+*/
+
+
+
+
+var TouchTracker = function(){
+
+	var touchArray = [];
+
+	var getTouchArrayIndex = function (touchIdentifer) {
+	    for (var i=0; i < touchArray.length; i++) {
+	        if (touchArray[i].id === touchIdentifer) {
+	            return i;
+	        }
+	    }
+	    return -1;
+	};
+
+	this.updateTouch = function(touch){
+		var i = getTouchArrayIndex(touch.identifier);
+		if(i >= 0){
+			touchArray[i].pageX = touch.pageX;
+			touchArray[i].pageY = touch.pageY;
+			return true;
+		}
+		return false;
+	};
+
+	this.deleteTouch = function(touchIdentifer){
+		var i = getTouchArrayIndex(touchIdentifer);
+		if(i >= 0){
+			touchArray.splice(i, 1);
+			return true;
+		}
+		return false;
+	};
+
+	this.getTouch = function(touchIdentifer){
+
+		var i = getTouchArrayIndex(touchIdentifer);
+		if(i >= 0){
+			return touchArray[i];
+		}
+		return null;
+
+	};
+
+	this.setTouch = function(touch){
+
+		var touchObject = {
+			id: touch.identifier,
+			startX: touch.pageX,
+			startY: touch.pageY,
+			pageX: touch.pageX,
+			pageY: touch.pageY
+		}
+
+		touchArray.push(touchObject);
+		return touchObject;
+
+	};
+
+
+};
+
+
+
+function Controller($, TouchTracker){
+
+	var thisController = this;
+
+	var findTarget = function(x,y, $els){
+
+		var $target = null;
+
+		$els.each( function(){
+
+			var $el = $(this);
+
+			var x1 = $el.offset().left;
+			var y1 = $el.offset().top;
+			var x2 = x1 + $el.outerWidth();
+			var y2 = y1 + $el.outerHeight();
+
+
+			if( x > x1 && x < x2 && y > y1 && y < y2 ){
+				$target = $el;
+			}
+
+		});
+
+		return $target;
+
+	};
+
+
+
+
+
+	var getCommandByViewCoordinates = (function(){
+
+		var x = 0, y = 0;
+
+		return function(newX,newY){
+
+			var xMin = $('#direction').offset().left;
+			var xMax = $('#direction').offset().left + $('#direction').width();
+			var yMin = $('#speed').offset().top;
+			var yMax = $('#speed').offset().top + $('#direction').height();
+
+			var xRange = xMax - xMin;
+			var yRange = yMax - yMin;
+
+			if(newX === 'center'){
+				x = 0;
+			}
+
+			if(newY === 'center'){
+				y = 0;
+			}
+
+			if(typeof newX === "number"){
+				var xInRange = newX - xMin;
+				var xPercent = xInRange / xRange;
+				x = xPercent * 2 - 1;
+			}
+
+			if(typeof newY === "number"){
+				var yInRange = newY - yMin;
+				var yPercent = yInRange / yRange;
+				y = yPercent * 2 - 1;
+				y = y * -1;
+			}
+
+			if(x < -1){ x = -1 };
+			if(x > 1){ x = 1 };
+			if(y < -1){ y = -1 };
+			if(y > 1){ y = 1 };
+
+			return {
+				x: Math.round(x*100)/100,
+				y: Math.round(y*100)/100
+			}
+
+		}
+
+	})();
+
+
+
+
+
+	var updateTouchMarker = function(id, x, y){
+
+		$el = $('#'+id);
+
+		if(x && $el.parent().attr('id') === 'direction'){
+			$el.css({
+				left: x - $('#direction').offset().left + 'px'
+			});
+		}
+		if(y && $el.parent().attr('id') === 'speed'){
+			$el.css({
+				top: y - $('#speed').offset().top + 'px'
+			});
+		}
+
+	};
+
+
+	var addTouchMarker = function($el, newId, x, y){
+
+		$output = $('<span class="touchMarker"></span>' ).attr('id', newId);
+
+		if(x){
+			$output.css({
+				left: x - $('#direction').offset().left + 'px'
+			});
+		}
+		if(y){
+			$output.css({
+				top: y - $('#speed').offset().top + 'px'
+			});
+		}
+
+		$el.append($output);
+
+	};
+
+	var removeTouchMarker = function(id){
+
+		$('#'+id).remove();
+
+	};
+
+
+
+	var setTouchEventListeners = function(){
+
+		var touch,
+			callbackData,
+			touchTracker = new TouchTracker();
+
+		var onTouchEnd = function(e) {
+			var i,
+				touches = event.changedTouches;
+
+		    for (var i=0; i < touches.length; i++) {
+		        var touch = touches[i];
+
+		        thisTouch = touchTracker.getTouch(touch.identifier);
+
+		        if(!thisTouch){
+		        	return;
+		        }
+
+		        $box = findTarget(thisTouch.startX, thisTouch.startY, $('.controlBox, .box'));
+
+		        if($box){
+
+			        if($box.attr('id') === 'direction'){
+		            	callbackData = getCommandByViewCoordinates('center',null);
+		            	thisController.onChange(callbackData);
+		            }
+
+		            if($box.attr('id') === 'speed'){
+		            	callbackData = getCommandByViewCoordinates(null,'center');
+		            	thisController.onChange(callbackData);
+		            }
+
+		            if($box.hasClass('box')){
+		            	callbackData = {
+		            		x: 0,
+		            		y: 0
+		            	}
+		            	thisController.onChange(callbackData);
+		            }
+
+		        }
+
+				removeTouchMarker('touch'+touch.identifier);
+
+				$('.box').removeClass('active');
+
+		        touchTracker.deleteTouch(touch.identifier);
+
+		    }
+
+				
+		};
+
+		var onTouchMove = function(e) {
+
+			var i,
+				touches = event.changedTouches,
+				$box;
+
+		    for (i=0; i < touches.length; i++) {
+
+				touch = touches[i];
+		        thisTouch = touchTracker.getTouch(touch.identifier);
+		
+		        if(!thisTouch){
+		        	return;
+		        }
+
+		        $box = findTarget(thisTouch.startX, thisTouch.startY, $('.controlBox, .box'));
+
+		        if($box){
+		        
+		            if($box.attr('id') === "speed"){
+			            updateTouchMarker('touch'+touch.identifier, null, touch.pageY);
+			            callbackData = getCommandByViewCoordinates(null, touch.pageY);
+						thisController.onChange(callbackData);
+			        }
+
+			        if($box.attr('id') === "direction"){
+			            updateTouchMarker('touch'+touch.identifier, touch.pageX, null);
+			            callbackData = getCommandByViewCoordinates(touch.pageX, null);
+						thisController.onChange(callbackData);
+			        }
+
+			        if($box.hasClass('box')){
+			        	$('.box').removeClass('active');
+			        	$box = findTarget(touch.pageX, touch.pageY, $('.box'));
+			        	if($box){
+				        	$box.addClass('active');
+				        	callbackData = {
+				        		x: parseFloat($box.data("coord").split(":")[0]),
+				        		y: parseFloat($box.data("coord").split(":")[1])
+				        	}
+				        	thisController.onChange(callbackData);
+				        } else {
+				        	callbackData = {
+				        		x: 0,
+				        		y: 0
+				        	}
+				        	thisController.onChange(callbackData);
+				        }
+			        }
+
+			    }
+
+	            // Store the record.
+	            touchTracker.updateTouch(touch);
+
+			}
+
+
+		};
+
+		var onTouchStart = function(e) {
+			
+			e.preventDefault();
+
+			var i,
+				touches = event.changedTouches,
+				$box;
+
+			for (i=0; i < touches.length; i++) {
+
+		        touch = touches[i];
+		        
+		        $box = findTarget(touch.pageX, touch.pageY, $('.controlBox, .box'));
+
+		        if($box){
+
+			        touchTracker.setTouch(touch);
+
+			        if($box.attr('id') === "speed"){
+			        	addTouchMarker( $box, 'touch'+touch.identifier, null, touch.pageY);
+						callbackData = getCommandByViewCoordinates(null, touch.pageY);
+						thisController.onChange(callbackData);
+					}
+
+			        if($box.attr('id') === "direction"){
+			        	addTouchMarker( $box, 'touch'+touch.identifier, touch.pageX, null);
+			        	callbackData = getCommandByViewCoordinates(touch.pageX, null);
+			        	thisController.onChange(callbackData);
+			        }
+
+			        if($box.hasClass('box')){
+			        	$box.addClass('active');
+				        	callbackData = {
+				        		x: parseFloat($box.data("coord").split(":")[0]),
+				        		y: parseFloat($box.data("coord").split(":")[1])
+				        	}
+				        	thisController.onChange(callbackData);
+			        }
+
+			    }
+
+
+
+		    }
+
+			
+
+		};
+
+		document.addEventListener('touchstart', onTouchStart);
+		document.addEventListener('touchmove', onTouchMove);
+		document.addEventListener('touchend', onTouchEnd);
+
+	};
+
+	this.onChange = function(){};
+
+	this.start = function(){
+		setTouchEventListeners();
+	};
+
+
+}
+
+
+
+
+
+
+function init($, TouchTracker, Controller){
+
+	var printData = function(data){
+
+		//switched x and y to feel more natural
+		$('.output').html("<span>"+data.y+"</span><span>"+data.x+"</span>");
+
+	};
+
+	var onTouchChange = function(data){
+
+		printData(data);
+		//websockets goes here
+
+	};
+
+
+	var setActiveController = function(){
+
+		$('.controller').removeClass('active');
+
+		if($(window).width() < $(window).height()){
+			$('#controllerP').addClass('active');
+		} else {
+			$('#controllerL').addClass('active');
+		}
+
+	};
+
+
+	var setColors = function(hex){
+
+		$('.box').css('background-color', hex);
+		$('#speed').css('border-right-color', hex);
+		$('.middleMarker').css('border-top-color', hex);
+		$('.centerMarker').css('border-left-color', hex);
+
+		$('#controllerL .output').css({
+			'border-right-color':hex,
+			'border-bottom-color':hex,
+			'border-left-color':hex
+		})
+
+	};
+
+
+
+	//START
+
+	setColors('#e77d20'); //set colour depending on assigned car
+	setActiveController(); //portrait or landscape
+
+	var controller = new Controller($, TouchTracker); //requires jQuery, TouchTracker (and DOM/CSS)
+	controller.onChange = onTouchChange; //listen to change event
+	controller.start();
+
+
+	$(window).on('resize', setActiveController); //portrait or landscape
+
+}
+
+init($, TouchTracker, Controller); //requires jQuery, TouchTracker and Controller
+
+
+/*
+//This prevents iPhone scrolling - it's assigned to the body?
+//I don't think I need it with my current code
+document.body.addEventListener('touchmove', function(event) {
+  event.preventDefault();
+}, false); 
+*/
+
+</script>
+</body></html>
